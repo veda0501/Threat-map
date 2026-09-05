@@ -159,7 +159,7 @@ function initMap() {
 
 
     const tileUrl = appConfig.cartoBasemapKey
-        ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=${encodeURIComponent(appConfig.cartoBasemapKey)}`
+        ? `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key=${encodeURIComponent(appConfig.cartoBasemapKey)}`
         : 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
 
     L.tileLayer(tileUrl, {
