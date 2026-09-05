@@ -2,18 +2,12 @@ services:
   - type: web
     name: threat-map
     runtime: node
-    buildCommand: npm install --build-from-source
+    buildCommand: npm install
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
         value: production
-      - key: DB_DIR
-        value: /var/data
-      - key: DB_PATH
-        value: /var/data/threats.db
-    # Persistent Disk keeps your SQLite data across deploys/restarts
-    # Free tier: 1GB included. Edit disk name/path in Render dashboard.
-    disk:
-      name: threat-data
-      mountPath: /var/data
-      sizeGB: 1
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

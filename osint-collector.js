@@ -161,7 +161,7 @@ class OSINTCollector {
         let dbFeedUrls = [];
 
         try {
-            const threatsCollection = require('./sqlite-db');
+            const threatsCollection = require('./supabase-db');
             if (threatsCollection && threatsCollection.rssFeeds) {
                 const activeFeeds = await threatsCollection.rssFeeds.find({ enabled: 1 });
                 dbFeedUrls = activeFeeds.map(f => f.url);

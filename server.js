@@ -6,7 +6,7 @@ const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
 const cron = require('node-cron');
-const threatsCollection = require('./sqlite-db');
+const threatsCollection = require('./supabase-db');
 const { parse } = require('csv-parse/sync');
 const axios = require('axios');
 
@@ -37,9 +37,9 @@ app.use(express.static(__dirname, {
 async function connectToDatabase() {
     try {
         await threatsCollection.init();
-        console.log('✓ Connected to SQLite database');
+        console.log('Connected to Supabase');
     } catch (error) {
-        console.error('✗ SQLite connection error:', error.message);
+        console.error('Supabase connection error:', error.message);
         process.exit(1);
     }
 }
@@ -375,26 +375,9 @@ app.patch('/api/threats/:threatId', async (req, res) => {
 // Get statistics
 app.get('/api/stats', async (req, res) => {
     try {
-        // Use SQL aggregation instead of loading all threats into memory
-        const totalRow = (await threatsCollection.rawQuery('SELECT COUNT(*) as total FROM threats'))[0];
-        const activeRow = (await threatsCollection.rawQuery("SELECT COUNT(*) as active FROM threats WHERE status != 'resolved'"))[0];
-        const catRows = await threatsCollection.rawQuery('SELECT category, COUNT(*) as count FROM threats GROUP BY category');
-        const sevRows = await threatsCollection.rawQuery('SELECT severity, COUNT(*) as count FROM threats GROUP BY severity');
-
-        const byCategory = {};
-        const bySeverity = {};
-        catRows.forEach(r => { byCategory[r.category] = r.count; });
-        sevRows.forEach(r => { bySeverity[r.severity] = r.count; });
-
         res.json({
             success: true,
-            stats: {
-                total: totalRow.total,
-                active: activeRow.active,
-                resolved: totalRow.total - activeRow.active,
-                byCategory,
-                bySeverity
-            }
+            stats: await threatsCollection.getStats()
         });
     } catch (error) {
         console.error('Error fetching stats:', error);
@@ -853,14 +836,14 @@ app.post('/api/articles/import', async (req, res) => {
 async function findExistingByTitleOrUrl(title, url) {
     // 1. Check by URL
     if (url) {
-        const byUrl = await threatsCollection.rawQuery('SELECT * FROM threats WHERE sources LIKE ?', [`%${url}%`]);
+        const byUrl = await threatsCollection.find({ sources: { $regex: url } }).toArray();
         const urlMatch = byUrl.find(t => { try { return JSON.parse(t.sources || '[]').some(s => s.url === url); } catch (_) { return false; } });
         if (urlMatch) return urlMatch;
     }
     // 2. Check by similar title (first 60 chars)
     if (title && title.length > 20) {
         const snippet = title.substring(0, 60).replace(/'/g, "''");
-        const byTitle = await threatsCollection.rawQuery("SELECT * FROM threats WHERE title LIKE ?", [`%${snippet}%`]);
+        const byTitle = await threatsCollection.find({ title: { $regex: snippet } }).toArray();
         if (byTitle.length > 0) return byTitle[0];
     }
     return null;
@@ -960,19 +943,21 @@ async function initializeServer() {
     }, 5000);
 }
 
-// Start server
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => {
-    console.log('\n=================================');
-    console.log('🌍 Global Threat Mapping Server');
-    console.log('=================================');
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Local:    http://localhost:${PORT}`);
-    console.log(`Network:  http://0.0.0.0:${PORT}`);
-    console.log('=================================\n');
+// Start the HTTP server only when this file is run directly. Vercel imports the app.
+if (require.main === module) {
+    const PORT = process.env.PORT || 3000;
+    server.listen(PORT, '0.0.0.0', () => {
+        console.log('\n=================================');
+        console.log('Global Threat Mapping Server');
+        console.log('=================================');
+        console.log(`Server running on port ${PORT}`);
+        console.log(`Local:    http://localhost:${PORT}`);
+        console.log(`Network:  http://0.0.0.0:${PORT}`);
+        console.log('=================================\n');
 
-    initializeServer();
-});
+        initializeServer();
+    });
+}
 
 // Export for testing
-module.exports = { app, io, threatsCollection };
+module.exports = { app, io, threatsCollection, initializeServer };

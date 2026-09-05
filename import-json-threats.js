@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const sqliteDb = require('./sqlite-db');
+const supabaseDb = require('./supabase-db');
 
 async function run() {
     const jsonPath = path.join(__dirname, 'custom_threats.json');
@@ -25,7 +25,7 @@ async function run() {
 
     try {
         console.log('Connecting to database...');
-        await sqliteDb.init();
+        await supabaseDb.init();
 
         const rawData = fs.readFileSync(jsonPath, 'utf8');
         const customThreats = JSON.parse(rawData);
@@ -66,11 +66,11 @@ async function run() {
                 updatedAt: new Date().toISOString()
             };
 
-            await sqliteDb.insertOne(threat);
+            await supabaseDb.insertOne(threat);
             count++;
         }
 
-        console.log(`✓ Success! Successfully imported ${count} threats into SQLite.`);
+        console.log(`Success! Successfully imported ${count} threats into Supabase.`);
         process.exit(0);
     } catch (error) {
         console.error('✗ Import failed:', error.message);
