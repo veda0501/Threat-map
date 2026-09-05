@@ -4,6 +4,7 @@
 
 // --- CONFIGURATION ---
 const API_URL = '';
+let appConfig = { cartoBasemapKey: '' };
 const DEFAULT_COORDS = [20, 0];
 const DEFAULT_ZOOM = 2;
 
@@ -28,7 +29,14 @@ let state = {
 
 
 // --- INITIALIZATION ---
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const configResponse = await fetch(`${API_URL}/api/config`);
+        if (configResponse.ok) appConfig = await configResponse.json();
+    } catch (error) {
+        console.warn('[INIT] config failed:', error.message);
+    }
+
     // Wrap each init in try-catch so one failure doesn't kill the chain
     const safeInit = (name, fn) => {
         try { fn(); } catch (e) { console.warn('[INIT] ' + name + ' failed:', e.message); }
@@ -150,7 +158,11 @@ function initMap() {
     });
 
 
-    L.tileLayer('https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    const tileUrl = appConfig.cartoBasemapKey
+        ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=${encodeURIComponent(appConfig.cartoBasemapKey)}`
+        : 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+
+    L.tileLayer(tileUrl, {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd',
         maxZoom: 20,

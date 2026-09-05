@@ -23,6 +23,10 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 
+app.get('/api/config', (req, res) => {
+    res.json({ cartoBasemapKey: process.env.CARTO_BASEMAP_KEY || '' });
+});
+
 // Serve the default UI page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
