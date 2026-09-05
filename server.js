@@ -577,39 +577,47 @@ function isRssFeed(contentType, body) {
 // Content quality detection - rejects challenge pages, cookie consent, thin content
 function detectGarbageContent(html, url) {
     const lower = (html || '').toLowerCase();
+    const visibleText = lower
+        .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+        .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    const hasArticleText = visibleText.length >= 400;
     const reasons = [];
 
     // Cloudflare / bot challenge pages
-    if (/just a moment/i.test(lower) || /verifying your browser/i.test(lower) ||
-        /checking your browser/i.test(lower) || /cf-challenge/i.test(lower) ||
+    if (!hasArticleText && (/just a moment/i.test(visibleText) || /verifying your browser/i.test(visibleText) ||
+        /checking your browser/i.test(visibleText) || /cf-challenge/i.test(lower) ||
         /turnstile/i.test(lower) || /challenge-platform/i.test(lower) ||
-        /ray id/i.test(lower) || /cloudflare/i.test(lower)) {
+        /ray id/i.test(visibleText))) {
         reasons.push('cloudflare-challenge');
     }
 
     // Cookie consent / login walls
-    if (/cookies must be enabled/i.test(lower) || /enable cookies/i.test(lower) ||
-        /please enable javascript/i.test(lower) || /cookie consent/i.test(lower) ||
-        /accept cookies/i.test(lower)) {
+    if (!hasArticleText && (/cookies must be enabled/i.test(visibleText) || /enable cookies/i.test(visibleText) ||
+        /please enable javascript/i.test(visibleText) || /cookie consent/i.test(visibleText) ||
+        /accept cookies/i.test(visibleText))) {
         reasons.push('cookie-consent-wall');
     }
 
     // Access denied / paywall
-    if (/access denied/i.test(lower) || /403 forbidden/i.test(lower) ||
-        /subscription required/i.test(lower) || /paywall/i.test(lower) ||
-        /sign in to continue/i.test(lower) || /log in to read/i.test(lower)) {
+    if (!hasArticleText && (/access denied/i.test(visibleText) || /403 forbidden/i.test(visibleText) ||
+        /subscription required/i.test(visibleText) || /paywall/i.test(visibleText) ||
+        /sign in to continue/i.test(visibleText) || /log in to read/i.test(visibleText))) {
         reasons.push('access-denied');
     }
 
     // CAPTCHA / human verification
-    if (/are you a robot/i.test(lower) || /captcha/i.test(lower) ||
-        /human verification/i.test(lower) || /prove you are human/i.test(lower)) {
+    if (!hasArticleText && (/are you a robot/i.test(visibleText) || /captcha/i.test(visibleText) ||
+        /human verification/i.test(visibleText) || /prove you are human/i.test(visibleText))) {
         reasons.push('captcha');
     }
 
-    // Browser not supported
-    if (/browser.*not.*supported/i.test(lower) || /unsupported browser/i.test(lower) ||
-        /please upgrade your browser/i.test(lower)) {
+    // Some publishers include this message in scripts or footer templates.
+    if (!hasArticleText && (/browser.*not.*supported/i.test(visibleText) || /unsupported browser/i.test(visibleText) ||
+        /please upgrade your browser/i.test(visibleText))) {
         reasons.push('unsupported-browser');
     }
 
