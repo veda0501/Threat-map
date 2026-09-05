@@ -1,0 +1,40 @@
+{
+  "name": "global-threat-mapping",
+  "version": "1.0.0",
+  "description": "Real-time global threat mapping platform using OSINT",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "cross-env PORT=4000 nodemon server.js",
+    "dev:3000": "cross-env PORT=3000 nodemon server.js"
+  },
+  "keywords": [
+    "threat-intelligence",
+    "osint",
+    "cybersecurity",
+    "threat-map"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "csv-parse": "^5.5.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "fast-xml-parser": "^4.5.1",
+    "leaflet": "^1.9.4",
+    "node-addon-api": "^8.9.1",
+    "node-cron": "^3.0.3",
+    "socket.io": "^4.7.2",
+    "sqlite3": "^6.0.1",
+    "validator": "^13.11.0"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "nodemon": "^3.0.2"
+  }
+}

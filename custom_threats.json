@@ -1,0 +1,16 @@
+[
+  {
+    "link": "https://www.darkreading.com/cyberattacks-data-breaches/cisa-third-party-data-breach-limited-treasury-dept",
+    "title": "CISA Third-Party Data Breach",
+    "sectorAffected": "Cybersecurity / National Security",
+    "sectors": [
+      "Government",
+      "Technology"
+    ],
+    "wasResponse": "Yes",
+    "response": "The Treasury Department treated the event as a major cybersecurity incident, alerted Congressional committees, and BeyondTrust/CISA conducted a forensic investigation which confirmed that the breach was limited to the Treasury Department.",
+    "origin": "Chinese state-backed threat actors (APT27 / Silk Typhoon)",
+    "date": "2026-06-13T12:00:00.000Z",
+    "additionalNotes": "Threat actors exploited a vulnerability in BeyondTrust remote support software using a stolen remote API key. They remotely accessed user workstations at the US Department of the Treasury and viewed unclassified documents."
+  }
+]

@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INtelligence Map | Upgraded Preview</title>
+
+    <!-- NEW Fonts: Space Grotesk (modern headings) + JetBrains Mono (data/code) + Inter (body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet MarkerCluster -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <style>
+/* ═══════════════════════════════════════════════════════════════
+   UPGRADED STYLES — Space Grotesk + JetBrains Mono
+   Advanced Analytics Dashboard + Improved Map UX
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+    --bg-dark: #050A14;
+    --bg-panel: rgba(5, 10, 20, 0.82);
+    --bg-deep: #030710;
+
+    --normal-accent: #00BDD6;
+    --analyst-accent: #009BB5;
+    --accent-primary: var(--analyst-accent);
+    --accent-secondary: #0D1B2E;
+    --accent-glow: rgba(0, 155, 181, 0.3);
+
+    --glass-bg: rgba(0, 155, 181, 0.04);
+    --glass-bg-hover: rgba(0, 155, 181, 0.1);
+    --glass-border: rgba(0, 155, 181, 0.12);
+    --glass-border-bright: rgba(0, 155, 181, 0.35);
+    --glass-blur: blur(24px);
+
+    /* Typography — UPGRADED */
+    --font-heading: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-data: 'JetBrains Mono', monospace;
+
+    --text-primary: #FFFFFF;
+    --text-secondary: #B8C5D0;
+    --text-muted: #4A6070;
+
+    --critical: #FF3D00;
+    --high: #FF9100;
+    --medium: #FFD600;
+    --low: #00E676;
+
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: var(--bg-dark);
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    background-image:
+        linear-gradient(rgba(0, 155, 181, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 155, 181, 0.025) 1px, transparent 1px);
+    background-size: 50px 50px;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ═══════════ HEADER ═══════════ */
+header {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 56px; padding: 0 28px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(5, 10, 20, 0.6);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--glass-border);
+    z-index: 1005;
+}
+
+.brand {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--font-heading);
+    font-size: 1.15rem; font-weight: 700;
+    letter-spacing: 0.5px;
+}
+.brand i { color: var(--accent-primary); font-size: 1.3rem; filter: drop-shadow(0 0 8px var(--accent-glow)); }
+.brand span.accent { color: var(--accent-primary); }
+
+.header-center {
+    display: flex; gap: 4px; align-items: center;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 30px; padding: 3px;
+}
+.nav-tab {
+    padding: 6px 16px; border: none; border-radius: 20px;
+    background: transparent; color: var(--text-muted);
+    font-family: var(--font-heading); font-size: 0.72rem; font-weight: 600;
+    cursor: pointer; transition: all 0.3s;
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+.nav-tab:hover { color: var(--text-secondary); background: rgba(255,255,255,0.04); }
+.nav-tab.active {
+    background: var(--accent-primary); color: var(--bg-dark);
+    box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.header-controls { display: flex; align-items: center; gap: 16px; }
+
+.status-indicator {
+    display: flex; align-items: center; gap: 7px;
+    font-family: var(--font-data); font-size: 0.7rem;
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.04);
+    padding: 5px 14px; border-radius: 20px;
+    border: 1px solid var(--glass-border);
+}
+.status-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #4f5b66;
+}
+.status-dot.active {
+    background: var(--low);
+    box-shadow: 0 0 8px var(--low);
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ═══════════ MAIN LAYOUT ═══════════ */
+.app-container { position: relative; height: 100%; width: 100%; overflow: hidden; }
+
+/* ── MAP ── */
+.map-region {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
+}
+#map { height: 100%; width: 100%; background: #000; }
+
+/* Map overlay grid */
+.map-overlay-grid {
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(0, 155, 181, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 155, 181, 0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none; z-index: 2;
+}
+
+/* ── MAP LEGEND (NEW) ── */
+.map-legend {
+    position: absolute; bottom: 120px; left: 28px;
+    background: var(--bg-panel);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    z-index: 500;
+    font-family: var(--font-data);
+    font-size: 0.65rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.legend-title {
+    font-family: var(--font-heading);
+    font-size: 0.6rem; font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1.5px;
+    margin-bottom: 10px;
+}
+.legend-item {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 6px; color: var(--text-secondary);
+}
+.legend-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+
+/* ── THREAT METRICS BAR (NEW) ── */
+.threat-metrics-bar {
+    position: absolute; top: 68px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 6px; z-index: 500;
+}
+.metric-chip {
+    background: var(--bg-panel);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    display: flex; align-items: center; gap: 7px;
+    font-family: var(--font-data); font-size: 0.65rem;
+    color: var(--text-secondary);
+    transition: all 0.3s;
+}
+.metric-chip:hover { border-color: var(--accent-primary); }
+.metric-chip .metric-val {
+    font-weight: 700; color: var(--accent-primary);
+    font-size: 0.75rem;
+}
+
+/* ═══════════ SIDEBARS ═══════════ */
+.sidebar {
+    position: absolute;
+    background: var(--bg-panel);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    display: flex; flex-direction: column;
+    padding: 16px;
+    overflow-y: auto;
+    z-index: 1010;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.sidebar-left {
+    top: 68px; left: 16px; width: 310px; bottom: 100px;
+}
+.sidebar-right {
+    top: 68px; right: 16px; width: 370px; bottom: 100px;
+}
+
+.sidebar.collapsed { opacity: 0; pointer-events: none; }
+.sidebar-left.collapsed { transform: translateX(-340px); }
+.sidebar-right.collapsed { transform: translateX(400px); }
+
+.sidebar-toggle {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 22px; height: 56px;
+    background: var(--bg-panel); border: 1px solid var(--glass-border);
+    color: var(--accent-primary);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 1002;
+    transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    backdrop-filter: blur(10px);
+    font-size: 0.7rem;
+}
+.sidebar-toggle:hover { background: var(--accent-primary); color: var(--bg-dark); }
+.left-toggle { left: 326px; border-radius: 0 8px 8px 0; }
+.right-toggle { right: 386px; border-radius: 8px 0 0 8px; }
+.sidebar-left.collapsed + .left-toggle { left: -1px; }
+.sidebar-right.collapsed + .right-toggle { right: -1px; }
+
+/* ── SEARCH ── */
+.search-container { position: relative; margin-bottom: 18px; }
+.search-input {
+    width: 100%;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 10px 14px 10px 38px;
+    color: var(--text-primary);
+    font-family: var(--font-body); font-size: 0.85rem;
+    transition: all 0.3s;
+}
+.search-input::placeholder { color: var(--text-muted); }
+.search-input:focus {
+    border-color: var(--accent-primary);
+    background: var(--glass-bg-hover);
+    box-shadow: 0 0 20px rgba(0, 155, 181, 0.08);
+}
+.search-icon {
+    position: absolute; left: 13px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted); font-size: 0.85rem;
+}
+
+/* ── FILTER GROUPS ── */
+.filter-group { margin-bottom: 22px; }
+.filter-label {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 0.6rem; font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1.5px;
+    margin-bottom: 10px;
+}
+
+.checkbox-list { display: flex; flex-direction: column; gap: 4px; }
+
+.custom-cb {
+    display: flex; align-items: center;
+    cursor: pointer; gap: 10px;
+    padding: 6px 10px; border-radius: var(--radius-sm);
+    transition: all 0.2s; user-select: none;
+}
+.custom-cb:hover { background: var(--glass-bg-hover); }
+.custom-cb input { display: none; }
+
+.checkmark {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--glass-border-bright);
+    border-radius: 3px; position: relative; transition: all 0.2s;
+}
+.custom-cb input:checked + .checkmark {
+    background: var(--accent-primary); border-color: var(--accent-primary);
+}
+.custom-cb input:checked + .checkmark::after {
+    content: '✓'; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); font-size: 10px; color: var(--bg-dark);
+}
+.cb-text { flex: 1; font-size: 0.8rem; color: var(--text-secondary); }
+.cb-icon { font-size: 0.75rem; color: #7A8A94; opacity: 0.7; width: 14px; text-align: center; }
+
+.sev-dot {
+    width: 7px; height: 7px; border-radius: 50%; margin: 0 8px; flex-shrink: 0;
+}
+.sev-dot.critical { background: var(--critical); box-shadow: 0 0 8px var(--critical); }
+.sev-dot.high { background: var(--high); box-shadow: 0 0 8px var(--high); }
+.sev-dot.medium { background: var(--medium); box-shadow: 0 0 8px var(--medium); }
+.sev-dot.low { background: var(--low); box-shadow: 0 0 8px var(--low); }
+
+/* Reset Button */
+.reset-btn {
+    width: 100%; padding: 10px;
+    background: transparent; border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    font-family: var(--font-heading); font-size: 0.7rem; font-weight: 600;
+    cursor: pointer; transition: all 0.3s;
+    text-transform: uppercase; letter-spacing: 1px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.reset-btn:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
+
+/* ═══════════ THREAT FEED CARDS (UPGRADED) ═══════════ */
+.feed-container { flex: 1; overflow-y: auto; padding-right: 2px; }
+
+.threat-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+.threat-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+    border-radius: 3px 0 0 3px;
+    transition: all 0.3s;
+}
+.threat-card.critical::before { background: var(--critical); }
+.threat-card.high::before { background: var(--high); }
+.threat-card.medium::before { background: var(--medium); }
+.threat-card.low::before { background: var(--low); }
+
+.threat-card:hover {
+    background: var(--glass-bg-hover);
+    border-color: var(--accent-primary);
+    transform: translateX(3px);
+}
+
+.card-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; margin-bottom: 6px;
+}
+.threat-id {
+    font-family: var(--font-data); font-size: 0.6rem; font-weight: 500;
+    color: var(--accent-primary);
+    background: rgba(0, 155, 181, 0.1);
+    padding: 2px 7px; border-radius: 4px;
+}
+.threat-time {
+    font-family: var(--font-data); font-size: 0.6rem;
+    color: var(--text-muted);
+}
+.threat-title {
+    font-family: var(--font-heading); font-size: 0.88rem; font-weight: 600;
+    margin-bottom: 10px; line-height: 1.35; color: var(--text-primary);
+}
+.card-footer {
+    display: flex; justify-content: space-between; align-items: center;
+}
+.threat-loc {
+    font-size: 0.72rem; color: var(--text-secondary);
+    display: flex; align-items: center; gap: 5px;
+}
+.severity-tag {
+    font-family: var(--font-data); font-size: 0.6rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 2px 8px; border-radius: 4px;
+}
+.severity-tag.critical { background: var(--critical); color: #000; }
+.severity-tag.high { background: var(--high); color: #000; }
+.severity-tag.medium { background: var(--medium); color: #000; }
+.severity-tag.low { background: var(--low); color: #000; }
+
+/* ═══════════════════════════════════════════════════════════
+   ADVANCED ANALYTICS DASHBOARD (NEW)
+   ═══════════════════════════════════════════════════════════ */
+.analytics-panel {
+    position: absolute;
+    top: 68px; left: 340px; right: 390px; bottom: 100px;
+    background: var(--bg-panel);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    z-index: 900;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    animation: panelSlideUp 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+@keyframes panelSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.analytics-panel.active { display: flex; }
+
+.panel-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--glass-border);
+}
+.panel-title {
+    font-family: var(--font-heading); font-size: 0.85rem; font-weight: 700;
+    color: var(--text-primary);
+    display: flex; align-items: center; gap: 10px;
+    text-transform: uppercase; letter-spacing: 1px;
+}
+.panel-title i { color: var(--accent-primary); font-size: 1rem; }
+.panel-close {
+    background: rgba(255,255,255,0.05); border: none; color: var(--text-muted);
+    width: 30px; height: 30px; border-radius: 50%;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+}
+.panel-close:hover { background: var(--glass-bg-hover); color: var(--text-primary); }
+
+.panel-body {
+    flex: 1; overflow-y: auto;
+    padding: 20px;
+}
+
+/* Analytics Grid */
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto auto auto;
+    gap: 16px;
+}
+
+/* Stat Cards */
+.stat-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 18px;
+    transition: all 0.3s;
+}
+.stat-card:hover { border-color: var(--accent-primary); }
+.stat-card .stat-label {
+    font-family: var(--font-heading);
+    font-size: 0.55rem; font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1.5px;
+    margin-bottom: 6px;
+}
+.stat-card .stat-value {
+    font-family: var(--font-heading); font-size: 2rem; font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+.stat-card .stat-change {
+    font-family: var(--font-data); font-size: 0.65rem;
+    margin-top: 6px; display: flex; align-items: center; gap: 4px;
+}
+.stat-change.up { color: var(--critical); }
+.stat-change.down { color: var(--low); }
+
+/* Chart Cards */
+.chart-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 18px;
+}
+.chart-card.wide { grid-column: span 2; }
+.chart-card.tall { grid-row: span 2; }
+.chart-title {
+    font-family: var(--font-heading);
+    font-size: 0.65rem; font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1.2px;
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+}
+.chart-title i { color: var(--accent-primary); font-size: 0.8rem; }
+
+.chart-wrapper { position: relative; width: 100%; }
+.chart-wrapper canvas { width: 100% !important; }
+
+/* Threat Intel IOC List */
+.ioc-list { display: flex; flex-direction: column; gap: 6px; }
+.ioc-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-data); font-size: 0.7rem;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+.ioc-item:hover { border-color: var(--accent-primary); background: var(--glass-bg-hover); }
+.ioc-type {
+    font-weight: 600; color: var(--accent-primary);
+    min-width: 60px; font-size: 0.6rem;
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+.ioc-value { flex: 1; word-break: break-all; }
+.ioc-confidence {
+    font-size: 0.55rem; color: var(--text-muted);
+    background: rgba(255,255,255,0.04);
+    padding: 2px 6px; border-radius: 3px;
+}
+
+/* ═══════════ BOTTOM TICKER ═══════════ */
+.bottom-ticker-bar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 32px;
+    background: rgba(8, 12, 20, 0.95);
+    backdrop-filter: blur(15px);
+    border-top: 1px solid var(--glass-border);
+    display: flex; align-items: center;
+    overflow: hidden; z-index: 1002;
+}
+.ticker-content {
+    display: flex; white-space: nowrap;
+    animation: tickerLoop 80s linear infinite;
+}
+.ticker-item {
+    display: inline-flex; align-items: center;
+    margin-right: 60px;
+    font-family: var(--font-data); font-size: 0.68rem;
+    color: var(--text-secondary);
+}
+@keyframes tickerLoop {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* ═══════════ BOTTOM DASHBOARD WIDGETS ═══════════ */
+.dashboard-widgets {
+    position: absolute; bottom: 38px; left: 50%;
+    transform: translateX(-50%);
+    width: max-content; height: auto;
+    background: rgba(8, 12, 20, 0.92);
+    backdrop-filter: blur(25px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    display: flex; align-items: center;
+    padding: 8px 18px; gap: 14px;
+    z-index: 500;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.7);
+}
+
+.dash-widget {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    padding: 0 14px; height: 100%;
+}
+.dash-widget:last-child { border-right: none; }
+
+.widget-label {
+    font-family: var(--font-heading);
+    font-size: 0.45rem; font-weight: 600;
+    color: var(--text-muted); letter-spacing: 1.5px;
+    text-transform: uppercase; margin-bottom: 6px;
+}
+
+.risk-control-group { display: flex; align-items: center; gap: 16px; }
+
+.analytics-bars-horizontal { display: flex; gap: 10px; justify-content: center; }
+.stat-row { flex: 1; min-width: fit-content; }
+.stat-header {
+    display: flex; justify-content: space-between;
+    font-family: var(--font-data); font-size: 0.4rem;
+    margin-bottom: 2px; color: var(--text-secondary); white-space: nowrap; gap: 4px;
+}
+.stat-bar { height: 2px; background: rgba(255,255,255,0.05); border-radius: 1px; overflow: hidden; }
+.stat-fill { height: 100%; background: var(--accent-primary); transition: width 0.8s ease-out; }
+
+.timeline-control {
+    display: flex;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 4px; padding: 2px; height: 26px;
+}
+.timeline-btn {
+    background: transparent; border: none;
+    font-family: var(--font-data); font-size: 0.5rem; font-weight: 700;
+    color: var(--text-muted); padding: 0 10px;
+    cursor: pointer; border-radius: 2px; transition: all 0.2s;
+    letter-spacing: 0.5px;
+}
+.timeline-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+.timeline-btn.active {
+    background: var(--accent-primary); color: var(--bg-dark);
+    box-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* ═══════════ MODAL ═══════════ */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+    display: none; justify-content: center; align-items: center;
+    z-index: 2000;
+}
+.modal-content {
+    width: 90%; max-width: 800px; max-height: 85vh;
+    background: rgba(5, 10, 20, 0.92);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border-bright);
+    border-radius: var(--radius-lg);
+    padding: 36px; overflow-y: auto;
+    position: relative;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+}
+.close-modal {
+    position: absolute; top: 20px; right: 20px;
+    background: rgba(255,255,255,0.05); border: none;
+    color: var(--text-primary); width: 32px; height: 32px;
+    border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+
+/* ═══════════ CUSTOM MARKERS ═══════════ */
+.custom-marker {
+    background: none !important; border: none !important;
+}
+.map-marker-container { position: relative; }
+.map-marker-dot {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 9px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 5;
+}
+.map-marker-dot:hover { transform: scale(1.4); z-index: 999; }
+
+.pulse-ring {
+    position: absolute; top: -8px; left: -8px;
+    width: 38px; height: 38px;
+    border: 2px solid var(--accent-primary);
+    border-radius: 50%;
+    animation: pulseRing 1.5s ease-out;
+}
+@keyframes pulseRing {
+    0% { transform: scale(0.5); opacity: 1; }
+    100% { transform: scale(2); opacity: 0; }
+}
+
+/* ═══════════ NOTIFICATION TOAST ═══════════ */
+.toast {
+    position: absolute; top: 70px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-panel);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--accent-primary);
+    border-radius: var(--radius-md);
+    padding: 10px 20px;
+    font-family: var(--font-data); font-size: 0.7rem;
+    color: var(--accent-primary);
+    z-index: 3000;
+    animation: toastIn 0.3s ease, toastOut 0.3s ease 3s forwards;
+    box-shadow: 0 8px 30px rgba(0,155,181,0.2);
+}
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
+@keyframes toastOut { to { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
+
+/* ═══════════ LEAFLET OVERRIDES ═══════════ */
+.leaflet-container { background: #000 !important; border: none !important; }
+.leaflet-popup-content-wrapper {
+    background: rgba(5, 10, 20, 0.95) !important;
+    backdrop-filter: blur(10px);
+    color: white !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: var(--radius-md) !important;
+    font-family: var(--font-body);
+}
+.leaflet-popup-tip { background: rgba(5, 10, 20, 0.95) !important; }
+.leaflet-control-zoom { display: none; }
+.marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
+    background: rgba(0, 155, 181, 0.3) !important;
+}
+.marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div {
+    background: rgba(0, 155, 181, 0.7) !important;
+    color: white !important;
+    font-family: var(--font-data);
+}
+    </style>
+</head>
+<body>
+
+<!-- ═══════════ HEADER ═══════════ -->
+<header>
+    <div class="brand">
+        <i class="fa-solid fa-radar"></i>
+        <span>INtelligence <span class="accent">Map</span></span>
+    </div>
+
+    <div class="header-center">
+        <button class="nav-tab active" data-view="map" onclick="switchView('map')">
+            <i class="fa-solid fa-globe"></i> MAP
+        </button>
+        <button class="nav-tab" data-view="analytics" onclick="switchView('analytics')">
+            <i class="fa-solid fa-chart-mixed"></i> ANALYTICS
+        </button>
+    </div>
+
+    <div class="header-controls">
+        <div class="status-indicator">
+            <div class="status-dot active" id="liveStatus"></div>
+            <span id="statusText">LIVE</span>
+        </div>
+    </div>
+</header>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<main class="app-container">
+
+    <!-- MAP -->
+    <section class="map-region">
+        <div id="map"></div>
+        <div class="map-overlay-grid"></div>
+    </section>
+
+    <div class="threat-metrics-bar">
+        <div class="metric-chip">
+            <i class="fa-solid fa-satellite-dish" style="color:var(--accent-primary);"></i>
+            <span>ACTIVE SIGNALS</span>
+            <span class="metric-val" id="metricActive">47</span>
+        </div>
+        <div class="metric-chip">
+            <i class="fa-solid fa-shield-halved" style="color:var(--low);"></i>
+            <span>MITIGATED</span>
+            <span class="metric-val" id="metricMitigated" style="color:var(--low);">8</span>
+        </div>
+        <div class="metric-chip">
+            <i class="fa-solid fa-clock" style="color:var(--medium);"></i>
+            <span>24H DELTA</span>
+            <span class="metric-val" id="metricDelta" style="color:var(--high);">+6</span>
+        </div>
+    </div>
+
+    <!-- MAP LEGEND (NEW) -->
+    <div class="map-legend">
+        <div class="legend-title">SEVERITY</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--critical);box-shadow:0 0 6px var(--critical);"></div> CRITICAL</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--high);box-shadow:0 0 6px var(--high);"></div> HIGH</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--medium);box-shadow:0 0 6px var(--medium);"></div> MEDIUM</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--low);box-shadow:0 0 6px var(--low);"></div> LOW</div>
+        <div class="legend-title" style="margin-top:10px;">CATEGORIES</div>
+        <div class="legend-item"><i class="fa-solid fa-laptop-code" style="color:var(--accent-primary);font-size:0.7rem;"></i> CYBER</div>
+        <div class="legend-item"><i class="fa-solid fa-jet-fighter" style="color:var(--high);font-size:0.7rem;"></i> WAR</div>
+        <div class="legend-item"><i class="fa-solid fa-virus-covid" style="color:var(--critical);font-size:0.7rem;"></i> HEALTH</div>
+        <div class="legend-item"><i class="fa-solid fa-building-columns" style="color:var(--medium);font-size:0.7rem;"></i> POLITICAL</div>
+    </div>
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar sidebar-left" id="sidebarLeft">
+        <div class="search-container">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="smartSearch" class="search-input" placeholder="Search intelligence...">
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">CATEGORIES</span>
+            <div class="checkbox-list" id="catFilters"></div>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">SEVERITY</span>
+            <div class="checkbox-list" id="sevFilters"></div>
+        </div>
+
+        <button class="reset-btn" onclick="resetFilters()">
+            <i class="fa-solid fa-sync"></i> RECALIBRATE
+        </button>
+    </aside>
+    <button id="toggleSidebarLeft" class="sidebar-toggle left-toggle" onclick="toggleSidebar('sidebarLeft')">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <!-- RIGHT SIDEBAR -->
+    <aside class="sidebar sidebar-right" id="sidebarRight">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <h2 style="font-family:var(--font-heading);font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);">
+                <i class="fa-solid fa-waveform-path" style="color:var(--accent-primary);margin-right:6px;"></i> SIGNAL FEED
+            </h2>
+            <span style="font-family:var(--font-data);font-size:0.6rem;color:var(--text-muted);" id="feedCount"></span>
+        </div>
+        <div class="feed-container" id="threatFeed"></div>
+    </aside>
+    <button id="toggleSidebarRight" class="sidebar-toggle right-toggle" onclick="toggleSidebar('sidebarRight')">
+        <i class="fa-solid fa-chevron-right"></i>
+    </button>
+
+    <!-- ═══════════ ANALYTICS PANEL (NEW) ═══════════ -->
+    <div class="analytics-panel" id="analyticsPanel">
+        <div class="panel-header">
+            <div class="panel-title">
+                <i class="fa-solid fa-chart-mixed"></i> ADVANCED ANALYTICS & THREAT INTELLIGENCE
+            </div>
+            <button class="panel-close" onclick="switchView('map')"><i class="fa-solid fa-times"></i></button>
+        </div>
+        <div class="panel-body">
+            <div class="analytics-grid">
+
+                <!-- Row 1: Stat Cards -->
+                <div class="stat-card">
+                    <div class="stat-label">Total Signals</div>
+                    <div class="stat-value" id="statTotal">847</div>
+                    <div class="stat-change up"><i class="fa-solid fa-arrow-up"></i> +12.4% vs last week</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Critical Alerts</div>
+                    <div class="stat-value" style="color:var(--critical);" id="statCritical">43</div>
+                    <div class="stat-change up"><i class="fa-solid fa-arrow-up"></i> +8.2% vs last week</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Mean Response Time</div>
+                    <div class="stat-value" id="statResponse">4.2h</div>
+                    <div class="stat-change down"><i class="fa-solid fa-arrow-down"></i> -15.7% improved</div>
+                </div>
+
+                <!-- Row 2: Charts -->
+                <div class="chart-card wide">
+                    <div class="chart-title"><i class="fa-solid fa-chart-line"></i> Threat Volume Trend (30 Days)</div>
+                    <div class="chart-wrapper"><canvas id="chartTrend" height="160"></canvas></div>
+                </div>
+                <div class="chart-card tall">
+                    <div class="chart-title"><i class="fa-solid fa-chart-pie"></i> Category Breakdown</div>
+                    <div class="chart-wrapper"><canvas id="chartCategory" height="200"></canvas></div>
+                </div>
+
+                <!-- Row 3: More Charts + IOC -->
+                <div class="chart-card">
+                    <div class="chart-title"><i class="fa-solid fa-chart-bar"></i> Severity Distribution</div>
+                    <div class="chart-wrapper"><canvas id="chartSeverity" height="140"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title"><i class="fa-solid fa-globe"></i> Top Targeted Regions</div>
+                    <div class="chart-wrapper"><canvas id="chartRegions" height="140"></canvas></div>
+                </div>
+
+                <!-- Row 4: IOC List -->
+                <div class="chart-card wide">
+                    <div class="chart-title"><i class="fa-solid fa-crosshairs"></i> Active Indicators of Compromise (IOCs)</div>
+                    <div class="ioc-list" id="iocList"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title"><i class="fa-solid fa-clock-rotate-left"></i> Attack Vector Frequency</div>
+                    <div class="chart-wrapper"><canvas id="chartAttackVec" height="140"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM DASHBOARD WIDGETS -->
+    <section class="dashboard-widgets">
+        <div class="dash-widget">
+            <span class="widget-label">GLOBAL RISK INDEX</span>
+            <div class="risk-control-group">
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <svg viewBox="0 0 100 55" width="80" height="44" style="flex-shrink:0;">
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="6"/>
+                        <circle id="riskDialFill" cx="50" cy="50" r="45" fill="none" stroke="var(--accent-primary)" stroke-width="6" stroke-dasharray="141.37" stroke-dashoffset="60" stroke-linecap="round" transform="rotate(-90 50 50)" style="transition: stroke-dashoffset 0.8s ease;"/>
+                        <text x="50" y="42" text-anchor="middle" fill="white" font-size="18" font-weight="800" font-family="var(--font-heading)"><tspan id="intensityScore">5.7</tspan></text>
+                        <text x="50" y="53" text-anchor="middle" fill="#4A6070" font-size="5" font-family="var(--font-data)">RISK INDEX</text>
+                    </svg>
+                    <div>
+                        <div style="font-size:0.5rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--font-heading);">SIGNAL STRENGTH</div>
+                        <div id="signalStrengthValue" style="font-size:1.2rem;font-weight:800;font-family:var(--font-heading);color:var(--accent-primary);">5.7</div>
+                    </div>
+                </div>
+                <div class="timeline-control">
+                    <button class="timeline-btn" data-period="2025">2025</button>
+                    <button class="timeline-btn active" data-period="2026">2026</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="dash-widget">
+            <span class="widget-label">THREAT DISTRIBUTION</span>
+            <div id="analyticsBars" class="analytics-bars-horizontal"></div>
+        </div>
+    </section>
+
+    <!-- BOTTOM TICKER -->
+    <section class="bottom-ticker-bar">
+        <div id="bottomTicker" class="ticker-content"></div>
+    </section>
+</main>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="threatModal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModal()"><i class="fa-solid fa-times"></i></button>
+        <div id="modalBody"></div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  SAMPLE DATA — Realistic Threat Intelligence
+// ═══════════════════════════════════════════════════════════
+const SAMPLE_THREATS = [
+    { threatId: 'CYB-2026-00147', title: 'APT-41 Zero-Day Exploit Targeting Critical Infrastructure', description: 'Advanced persistent threat group APT-41 deployed a novel zero-day exploit (CVE-2026-1234) against SCADA systems in power grid operators across Southeast Asia. The exploit leverages a buffer overflow in proprietary industrial control protocols.', eventTime: '2026-08-12T08:30:00Z', location: { country: 'Vietnam', coordinates: [14.0583, 108.2772] }, category: 'Cyber', severity: 'Critical', status: 'active', confidence: 92 },
+    { threatId: 'WAR-2026-00892', title: 'Missile Strike Reported Near Strait of Hormuz Naval Base', description: 'Multiple ballistic missiles launched from unidentified launch sites targeting naval installations near the Strait of Hormuz. Anti-ship missiles intercepted by coalition defense systems. Civilian port facilities sustained collateral damage.', eventTime: '2026-08-12T06:15:00Z', location: { country: 'Iran', coordinates: [26.5, 56.25] }, category: 'War', severity: 'Critical', status: 'active', confidence: 95 },
+    { threatId: 'HLT-2026-00334', title: 'Novel Avian Influenza H7N9 Cluster Detected in Guangdong', description: 'Chinese CDC confirmed 14 cases of novel H7N9 avian influenza with human-to-human transmission potential in Guangdong province. WHO has been notified. Travel advisories under review.', eventTime: '2026-08-12T04:00:00Z', location: { country: 'China', coordinates: [23.1291, 113.2644] }, category: 'Health', severity: 'High', status: 'active', confidence: 88 },
+    { threatId: 'POL-2026-00211', title: 'Sanctions Evasion Network Detected via Baltic Shell Companies', description: 'Intelligence agencies identified a network of 47 shell companies across Latvia, Estonia, and Lithuania facilitating sanctions evasion for restricted technology transfers. Financial flows traced through cryptocurrency tumblers.', eventTime: '2026-08-11T22:45:00Z', location: { country: 'Latvia', coordinates: [56.8796, 24.6032] }, category: 'Political', severity: 'High', status: 'active', confidence: 78 },
+    { threatId: 'CYB-2026-00145', title: 'Ransomware Campaign Hits European Hospital Network', description: 'LockBit 4.0 ransomware variant encrypted critical systems across 23 hospitals in Germany and France. Patient data exfiltrated. Emergency services rerouted. Attack vector: compromised VPN credentials.', eventTime: '2026-08-12T03:20:00Z', location: { country: 'Germany', coordinates: [51.1657, 10.4515] }, category: 'Cyber', severity: 'Critical', status: 'active', confidence: 90 },
+    { threatId: 'ECO-2026-00188', title: 'Taiwan Strait Shipping Disruption After Submarine Cable Cut', description: 'Primary submarine communications cable between Taiwan and Philippines severed. Shipping lanes in the Taiwan Strait experiencing rerouting delays. Taiwan government attributes incident to state-sponsored sabotage.', eventTime: '2026-08-11T18:30:00Z', location: { country: 'Taiwan', coordinates: [23.6978, 120.9605] }, category: 'Economic', severity: 'Medium', status: 'active', confidence: 82 },
+    { threatId: 'ENV-2026-00067', title: 'Category 5 Typhoon Approaching Philippines — Mass Evacuations Ordered', description: 'Typhoon Kai-Tak upgraded to Category 5 with sustained winds of 280 km/h. Philippines government ordered mandatory evacuations of 2.3 million residents in eastern Visayas and Bicol regions.', eventTime: '2026-08-12T01:00:00Z', location: { country: 'Philippines', coordinates: [12.8797, 121.7740] }, category: 'Environmental', severity: 'High', status: 'active', confidence: 97 },
+    { threatId: 'HYB-2026-00098', title: 'Coordinated Cyber-Physical Attack on Baltic Power Grid', description: 'Simultaneous DDoS attack on Estonian grid control systems coinciding with suspicious naval maneuvers in the Gulf of Finland. GPS jamming detected across Tallinn airspace. Article 5 consultation triggered.', eventTime: '2026-08-11T14:20:00Z', location: { country: 'Estonia', coordinates: [59.4370, 24.7536] }, category: 'Hybrid', severity: 'Critical', status: 'active', confidence: 85 },
+    { threatId: 'WAR-2026-00891', title: 'Drone Swarm Detected Over Neom Special Economic Zone', description: 'Saudi air defense intercepted 34 drones approaching the Neom megaproject construction site. Houthi forces claimed responsibility. No casualties reported. Patriot battery engagement confirmed.', eventTime: '2026-08-12T07:45:00Z', location: { country: 'Saudi Arabia', coordinates: [27.9500, 35.6300] }, category: 'War', severity: 'High', status: 'active', confidence: 93 },
+    { threatId: 'CYB-2026-00146', title: 'SolarWinds Orion Supply Chain Backdoor Discovered', description: 'New supply chain compromise discovered in SolarWinds Orion platform affecting 340+ government and enterprise networks. Backdoor persists across software updates. CISA emergency directive issued.', eventTime: '2026-08-11T20:10:00Z', location: { country: 'United States', coordinates: [38.9072, -77.0369] }, category: 'Cyber', severity: 'Critical', status: 'active', confidence: 88 },
+    { threatId: 'POL-2026-00210', title: 'Military Coup Attempt Reported in West African Nation', description: 'Unconfirmed reports of military factions seizing state television headquarters in Bamako. Internet connectivity disrupted. ECOWAS emergency session convened. French embassy activated contingency protocols.', eventTime: '2026-08-11T16:00:00Z', location: { country: 'Mali', coordinates: [12.6392, -8.0029] }, category: 'Political', severity: 'High', status: 'emerging', confidence: 65 },
+    { threatId: 'HLT-2026-00333', title: 'Marburg Virus Outbreak Confirmed in Angola — WHO PHEIC Declared', description: 'WHO declared Public Health Emergency of International Concern after Marburg virus cases confirmed in Luanda province, Angola. 47 confirmed cases with 60% CFR. International response teams mobilized.', eventTime: '2026-08-12T05:30:00Z', location: { country: 'Angola', coordinates: [-8.83999, 13.2894] }, category: 'Health', severity: 'Critical', status: 'active', confidence: 94 },
+    { threatId: 'ECO-2026-00187', title: 'OPEC Emergency Meeting as Oil Prices Spike 18% in 24 Hours', description: 'Crude oil surged past $142/barrel following Strait of Hormuz tensions. OPEC called emergency session. Global supply chain disruption warnings issued. Strategic petroleum reserve releases under consideration.', eventTime: '2026-08-11T23:30:00Z', location: { country: 'Qatar', coordinates: [25.2854, 51.5310] }, category: 'Economic', severity: 'High', status: 'active', confidence: 91 },
+    { threatId: 'WAR-2026-00890', title: 'Ukrainian Drone Strike Hits Russian Air Base in Rostov', description: 'Long-range Ukrainian strike drones hit Morozovsk air base in Rostov Oblast destroying 3 Su-34 fighter-bombers. Russia confirmed damage but claimed all aircraft were "previously decommissioned."', eventTime: '2026-08-12T02:10:00Z', location: { country: 'Russia', coordinates: [46.3400, 40.2800] }, category: 'War', severity: 'High', status: 'active', confidence: 87 },
+    { threatId: 'ENV-2026-00066', title: 'Seismic Activity Surge Detected Along Cascadia Subduction Zone', description: 'USGS reported 847 micro-earthquakes in 48 hours along the Cascadia Subduction Zone. Probability of M8.0+ event elevated to 12% within 30 days. Emergency preparedness advisories issued for Pacific Northwest.', eventTime: '2026-08-11T10:00:00Z', location: { country: 'United States', coordinates: [44.0582, -121.3153] }, category: 'Environmental', severity: 'Medium', status: 'active', confidence: 72 },
+    { threatId: 'CYB-2026-00144', title: 'North Korean Lazarus Group Targets SWIFT Banking Network', description: 'Lazarus Group attempted $890M SWIFT fraud targeting central banks in Cambodia and Myanmar. Attack partially successful — $120M transferred to cryptocurrency mixing services before detection.', eventTime: '2026-08-11T12:45:00Z', location: { country: 'Cambodia', coordinates: [11.5564, 104.9282] }, category: 'Cyber', severity: 'Critical', status: 'active', confidence: 91 },
+    { threatId: 'HYB-2026-00097', title: 'GPS Spoofing Campaign Disrupts Mediterranean Shipping', description: 'Widespread GPS spoofing affecting commercial shipping in Eastern Mediterranean. 34 vessels reported incorrect position data. Suspected Russian electronic warfare testing. NATO maritime patrol activated.', eventTime: '2026-08-11T09:30:00Z', location: { country: 'Greece', coordinates: [37.9838, 23.7275] }, category: 'Hybrid', severity: 'Medium', status: 'active', confidence: 80 },
+];
+
+// ═══════════════════════════════════════════════════════════
+//  APP STATE
+// ═══════════════════════════════════════════════════════════
+let state = {
+    map: null,
+    markers: [],
+    markerCluster: null,
+    currentView: 'map',
+    threats: SAMPLE_THREATS,
+    charts: {}
+};
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+    initMap();
+    buildFilterUI();
+    renderFeed(SAMPLE_THREATS);
+    renderTicker(SAMPLE_THREATS);
+    renderAnalyticsBars(SAMPLE_THREATS);
+    initCharts();
+    renderIOCList();
+});
+
+// ═══════════════════════════════════════════════════════════
+//  MAP
+// ═══════════════════════════════════════════════════════════
+function initMap() {
+    state.map = L.map('map', {
+        center: [25, 45],
+        zoom: 2.5,
+        minZoom: 2,
+        maxZoom: 18,
+        zoomSnap: 0.5,
+        zoomControl: false,
+        attributionControl: false
+    });
+
+    L.tileLayer('https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd',
+        maxZoom: 20
+    }).addTo(state.map);
+
+    state.markerCluster = L.markerClusterGroup({
+        maxClusterRadius: 40,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        iconCreateFunction: function(cluster) {
+            const count = cluster.getChildCount();
+            return L.divIcon({
+                html: `<div style="
+                    background: rgba(0, 155, 181, 0.6);
+                    border: 2px solid var(--accent-primary);
+                    border-radius: 50%;
+                    width: 36px; height: 36px;
+                    display: flex; align-items: center; justify-content: center;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 11px; font-weight: 700; color: white;
+                    box-shadow: 0 0 15px rgba(0,155,181,0.4);
+                ">${count}</div>`,
+                className: 'custom-cluster',
+                iconSize: [36, 36]
+            });
+        }
+    });
+    state.map.addLayer(state.markerCluster);
+
+    // Add threat markers
+    SAMPLE_THREATS.forEach(threat => {
+        if (!threat.location?.coordinates) return;
+        const color = getSeverityColor(threat.severity);
+        const iconClass = getCategoryIcon(threat.category);
+        const icon = L.divIcon({
+            className: 'custom-marker',
+            html: `<div class="map-marker-container">
+                <div class="map-marker-dot" style="background-color:${color};box-shadow:0 0 10px ${color},0 0 20px ${color};">
+                    <i class="fa-solid ${iconClass}"></i>
+                </div>
+            </div>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+        });
+        const marker = L.marker(threat.location.coordinates, { icon });
+        marker.bindPopup(`
+            <div style="min-width:220px;font-family:'Space Grotesk',sans-serif;">
+                <div style="font-size:0.6rem;color:#009BB5;font-family:'JetBrains Mono',monospace;margin-bottom:4px;">${threat.threatId}</div>
+                <div style="font-size:0.9rem;font-weight:700;margin-bottom:8px;line-height:1.3;">${threat.title}</div>
+                <div style="display:flex;gap:8px;margin-bottom:6px;">
+                    <span style="background:${color};color:#000;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:700;font-family:'JetBrains Mono',monospace;">${threat.severity.toUpperCase()}</span>
+                    <span style="background:rgba(255,255,255,0.1);padding:2px 8px;border-radius:4px;font-size:0.6rem;color:#B8C5D0;font-family:'JetBrains Mono',monospace;">${(threat.category || '').toUpperCase()}</span>
+                </div>
+                <div style="font-size:0.75rem;color:#B8C5D0;line-height:1.4;">${threat.description.slice(0, 120)}...</div>
+                <div style="margin-top:8px;font-size:0.6rem;color:#4A6070;font-family:'JetBrains Mono',monospace;">
+                    <i class="fa-solid fa-location-dot"></i> ${threat.location.country} &nbsp;|&nbsp; Confidence: ${threat.confidence}%
+                </div>
+            </div>
+        `);
+        state.markerCluster.addLayer(marker);
+    });
+
+    // Draw connection lines between related threats
+    drawThreatConnections();
+}
+
+function drawThreatConnections() {
+    // Draw faint lines connecting critical threats
+    const criticals = SAMPLE_THREATS.filter(t => t.severity === 'Critical' && t.location?.coordinates);
+    for (let i = 0; i < criticals.length - 1; i++) {
+        const from = criticals[i].location.coordinates;
+        const to = criticals[i + 1].location.coordinates;
+        L.polyline([from, to], {
+            color: 'rgba(0, 155, 181, 0.12)',
+            weight: 1,
+            dashArray: '6,8',
+            opacity: 0.6
+        }).addTo(state.map);
+    }
+}
+
+function getSeverityColor(sev) {
+    const c = { Critical: '#FF3D00', High: '#FF9100', Medium: '#FFD600', Low: '#00E676' };
+    return c[sev] || '#94a3b8';
+}
+function getCategoryIcon(cat) {
+    const i = { cyber:'fa-laptop-code', health:'fa-virus-covid', political:'fa-building-columns', war:'fa-jet-fighter', economic:'fa-chart-line', environmental:'fa-cloud-bolt', hybrid:'fa-shield-halved' };
+    return i[(cat||'').toLowerCase()] || 'fa-circle-dot';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  FEED
+// ═══════════════════════════════════════════════════════════
+function renderFeed(threats) {
+    const feed = document.getElementById('threatFeed');
+    document.getElementById('feedCount').textContent = `${threats.length} SIGNALS`;
+
+    feed.innerHTML = threats.map(t => {
+        const sev = (t.severity||'').toLowerCase();
+        const time = formatTime(t.eventTime);
+        return `
+        <div class="threat-card ${sev}" onclick="openDetail('${t.threatId}')">
+            <div class="card-header">
+                <span class="threat-id">${t.threatId}</span>
+                <span class="threat-time">${time}</span>
+            </div>
+            <div class="threat-title">${t.title}</div>
+            <div class="card-footer">
+                <div class="threat-loc"><i class="fa-solid fa-location-dot"></i> ${t.location.country}</div>
+                <span class="severity-tag ${sev}">${t.severity.toUpperCase()}</span>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function formatTime(ts) {
+    const diff = (Date.now() - new Date(ts).getTime()) / 60000;
+    if (diff < 60) return `${Math.floor(diff)}M AGO`;
+    if (diff < 1440) return `${Math.floor(diff / 60)}H AGO`;
+    return `${Math.floor(diff / 1440)}D AGO`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  FILTERS
+// ═══════════════════════════════════════════════════════════
+function buildFilterUI() {
+    const cats = ['Cyber','Health','Political','War','Economic','Environmental','Hybrid'];
+    const catIcons = { Cyber:'fa-laptop-code', Health:'fa-virus-covid', Political:'fa-building-columns', War:'fa-jet-fighter', Economic:'fa-chart-line', Environmental:'fa-cloud-bolt', Hybrid:'fa-shield-halved' };
+    const sevs = ['Critical','High','Medium','Low'];
+    const sevColors = { Critical:'var(--critical)', High:'var(--high)', Medium:'var(--medium)', Low:'var(--low)' };
+
+    document.getElementById('catFilters').innerHTML = cats.map(c => `
+        <label class="custom-cb">
+            <input type="checkbox" checked>
+            <span class="checkmark"></span>
+            <i class="fa-solid ${catIcons[c]} cb-icon"></i>
+            <span class="cb-text">${c}</span>
+        </label>
+    `).join('');
+
+    document.getElementById('sevFilters').innerHTML = sevs.map(s => `
+        <label class="custom-cb">
+            <input type="checkbox" checked>
+            <span class="checkmark"></span>
+            <span class="sev-dot" style="background:${sevColors[s]};box-shadow:0 0 8px ${sevColors[s]};"></span>
+            <span class="cb-text">${s}</span>
+        </label>
+    `).join('');
+}
+
+function resetFilters() {
+    document.querySelectorAll('.sidebar input[type=checkbox]').forEach(cb => cb.checked = true);
+    document.getElementById('smartSearch').value = '';
+    renderFeed(SAMPLE_THREATS);
+    showToast('SENSORS RECALIBRATED');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ANALYTICS BARS
+// ═══════════════════════════════════════════════════════════
+function renderAnalyticsBars(threats) {
+    const cats = ['Cyber','Health','Political','War','Economic','Environmental','Hybrid'];
+    const stats = {};
+    cats.forEach(c => stats[c] = 0);
+    threats.forEach(t => {
+        const c = (t.category||'').trim();
+        if (stats.hasOwnProperty(c)) stats[c]++;
+    });
+    const max = Math.max(...Object.values(stats), 1);
+    const sorted = Object.entries(stats).sort((a,b) => b[1] - a[1]);
+
+    document.getElementById('analyticsBars').innerHTML = sorted.map(([cat, count]) => `
+        <div class="stat-row">
+            <div class="stat-header"><span>${cat}</span><span>${count}</span></div>
+            <div class="stat-bar"><div class="stat-fill" style="width:${(count/max)*100}%"></div></div>
+        </div>
+    `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TICKER
+// ═══════════════════════════════════════════════════════════
+function renderTicker(threats) {
+    const ticker = document.getElementById('bottomTicker');
+    const total = threats.length;
+    const crit = threats.filter(t => t.severity === 'Critical').length;
+    const cats = {};
+    threats.forEach(t => { cats[t.category] = (cats[t.category]||0) + 1; });
+    let topCat = Object.entries(cats).sort((a,b) => b[1]-a[1])[0];
+    const text = `
+        <span class="ticker-item"><span style="color:var(--text-muted);">TOTAL SIGNALS:</span> <span style="color:var(--accent-primary);font-weight:700;">${total}</span></span>
+        <span class="ticker-item"><span style="color:var(--text-muted);">CRITICAL:</span> <span style="color:var(--critical);font-weight:700;">${crit}</span></span>
+        <span class="ticker-item"><span style="color:var(--text-muted);">HIGHEST CATEGORY:</span> <span style="color:var(--high);font-weight:700;">${topCat[0].toUpperCase()}</span> (${topCat[1]})</span>
+        <span class="ticker-item"><span style="color:var(--text-muted);">REGIONS AFFECTED:</span> <span style="color:var(--accent-primary);font-weight:700;">14</span></span>
+        <span class="ticker-item"><span style="color:var(--text-muted);">IOC TRACKED:</span> <span style="color:var(--medium);font-weight:700;">2,847</span></span>
+        <span class="ticker-item"><span style="color:var(--text-muted);">AVG CONFIDENCE:</span> <span style="color:var(--low);font-weight:700;">86.4%</span></span>
+    `;
+    ticker.innerHTML = text + text + text + text + text + text;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  VIEW SWITCHING
+// ═══════════════════════════════════════════════════════════
+function switchView(view) {
+    state.currentView = view;
+    document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.view === view));
+    const panel = document.getElementById('analyticsPanel');
+    if (view === 'map') {
+        panel.classList.remove('active');
+    } else {
+        panel.classList.add('active');
+        // Resize charts when panel becomes visible
+        setTimeout(() => {
+            Object.values(state.charts).forEach(c => c.resize());
+        }, 100);
+    }
+    setTimeout(() => state.map && state.map.invalidateSize(), 400);
+}
+
+function toggleSidebar(id) {
+    document.getElementById(id).classList.toggle('collapsed');
+    setTimeout(() => state.map && state.map.invalidateSize(), 400);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DETAIL MODAL
+// ═══════════════════════════════════════════════════════════
+function openDetail(id) {
+    const t = SAMPLE_THREATS.find(x => x.threatId === id);
+    if (!t) return;
+    const color = getSeverityColor(t.severity);
+    const sev = (t.severity||'').toLowerCase();
+    document.getElementById('modalBody').innerHTML = `
+        <div style="margin-bottom:8px;display:flex;align-items:center;gap:10px;">
+            <span class="threat-id" style="font-size:0.7rem;">${t.threatId}</span>
+            <span class="severity-tag ${sev}" style="font-size:0.65rem;">${t.severity.toUpperCase()}</span>
+            <span style="font-family:var(--font-data);font-size:0.6rem;color:var(--text-muted);">${t.confidence}% CONFIDENCE</span>
+        </div>
+        <h1 style="font-family:var(--font-heading);font-size:2rem;font-weight:700;margin-bottom:16px;line-height:1.15;letter-spacing:-0.5px;">${t.title}</h1>
+        <div style="display:flex;gap:10px;margin-bottom:24px;">
+            <span style="background:rgba(255,255,255,0.05);padding:5px 12px;border-radius:6px;font-size:0.75rem;color:var(--text-secondary);border:1px solid var(--glass-border);"><i class="fa-solid fa-location-dot" style="margin-right:5px;"></i>${t.location.country}</span>
+            <span style="background:rgba(255,255,255,0.05);padding:5px 12px;border-radius:6px;font-size:0.75rem;color:var(--text-secondary);border:1px solid var(--glass-border);"><i class="fa-solid ${getCategoryIcon(t.category)}" style="margin-right:5px;"></i>${(t.category || '').toUpperCase()}</span>
+        </div>
+        <p style="line-height:1.7;color:var(--text-primary);font-size:1rem;margin-bottom:24px;">${t.description}</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="background:rgba(255,255,255,0.03);padding:18px;border-radius:12px;border:1px solid var(--glass-border);">
+                <div style="font-family:var(--font-heading);font-size:0.55rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;">SEVERITY INDEX</div>
+                <div style="font-family:var(--font-heading);font-weight:800;font-size:1.5rem;color:${color};">${t.severity.toUpperCase()}</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);padding:18px;border-radius:12px;border:1px solid var(--glass-border);">
+                <div style="font-family:var(--font-heading);font-size:0.55rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;">CONFIDENCE</div>
+                <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;margin-bottom:8px;">
+                    <div style="width:${t.confidence}%;height:100%;background:var(--accent-primary);border-radius:3px;"></div>
+                </div>
+                <div style="text-align:right;font-family:var(--font-data);font-size:0.8rem;color:var(--accent-primary);">${t.confidence}%</div>
+            </div>
+        </div>
+    `;
+    document.getElementById('threatModal').style.display = 'flex';
+}
+
+function closeModal() { document.getElementById('threatModal').style.display = 'none'; }
+
+// ═══════════════════════════════════════════════════════════
+//  CHARTS (Chart.js)
+// ═══════════════════════════════════════════════════════════
+function initCharts() {
+    const commonOpts = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { ticks: { color: '#4A6070', font: { family: "'JetBrains Mono'", size: 9 } }, grid: { color: 'rgba(255,255,255,0.03)' } },
+            y: { ticks: { color: '#4A6070', font: { family: "'JetBrains Mono'", size: 9 } }, grid: { color: 'rgba(255,255,255,0.03)' } }
+        }
+    };
+
+    // Trend Chart
+    const trendLabels = Array.from({length:30}, (_,i) => `Aug ${i+1}`);
+    const trendData = [12,18,15,22,28,35,31,26,40,38,44,42,48,35,30,33,39,45,42,50,48,55,52,47,58,62,55,50,60,64];
+    state.charts.trend = new Chart(document.getElementById('chartTrend'), {
+        type: 'line',
+        data: {
+            labels: trendLabels,
+            datasets: [{
+                data: trendData,
+                borderColor: '#009BB5',
+                backgroundColor: 'rgba(0,155,181,0.08)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                borderWidth: 2
+            }]
+        },
+        options: { ...commonOpts }
+    });
+
+    // Category Doughnut
+    state.charts.category = new Chart(document.getElementById('chartCategory'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Cyber','War','Health','Political','Environmental','Economic','Hybrid'],
+            datasets: [{
+                data: [5,4,2,2,2,2,2],
+                backgroundColor: ['#009BB5','#FF9100','#FF3D00','#FFD600','#00E676','#8B5CF6','#EC4899'],
+                borderColor: '#050A14',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        color: '#B8C5D0',
+                        font: { family: "'Space Grotesk'", size: 10 },
+                        padding: 10,
+                        usePointStyle: true,
+                        pointStyleWidth: 8
+                    }
+                }
+            }
+        }
+    });
+
+    // Severity Bar
+    state.charts.severity = new Chart(document.getElementById('chartSeverity'), {
+        type: 'bar',
+        data: {
+            labels: ['Critical','High','Medium','Low'],
+            datasets: [{
+                data: [6,6,3,0],
+                backgroundColor: ['#FF3D00','#FF9100','#FFD600','#00E676'],
+                borderRadius: 4
+            }]
+        },
+        options: { ...commonOpts, indexAxis: 'y' }
+    });
+
+    // Regions Horizontal Bar
+    state.charts.regions = new Chart(document.getElementById('chartRegions'), {
+        type: 'bar',
+        data: {
+            labels: ['Iran','Germany','Russia','China','Vietnam','Estonia','Taiwan','Cambodia'],
+            datasets: [{
+                data: [4,3,2,2,1,1,1,1],
+                backgroundColor: 'rgba(0,155,181,0.6)',
+                borderRadius: 4
+            }]
+        },
+        options: { ...commonOpts, indexAxis: 'y' }
+    });
+
+    // Attack Vector Radar
+    state.charts.attackVec = new Chart(document.getElementById('chartAttackVec'), {
+        type: 'radar',
+        data: {
+            labels: ['Missile','Drone','Cyber','Economic','Biological','Sabotage'],
+            datasets: [{
+                data: [85,72,95,60,55,40],
+                backgroundColor: 'rgba(0,155,181,0.15)',
+                borderColor: '#009BB5',
+                borderWidth: 2,
+                pointRadius: 3,
+                pointBackgroundColor: '#009BB5'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                r: {
+                    ticks: { display: false },
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    angleLines: { color: 'rgba(255,255,255,0.05)' },
+                    pointLabels: {
+                        color: '#B8C5D0',
+                        font: { family: "'JetBrains Mono'", size: 8 }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  IOC LIST
+// ═══════════════════════════════════════════════════════════
+function renderIOCList() {
+    const iocs = [
+        { type: 'IP', value: '185.220.101.47', confidence: '92%' },
+        { type: 'Hash', value: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', confidence: '88%' },
+        { type: 'Domain', value: 'c2-infrastructure.evil[.]com', confidence: '95%' },
+        { type: 'URL', value: 'hxxps://phish-kit.example[.]net/login', confidence: '87%' },
+        { type: 'Email', value: 'apt41-operator@protonmail[.]com', confidence: '79%' },
+        { type: 'CIDR', value: '103.224.182.0/24', confidence: '91%' },
+    ];
+    document.getElementById('iocList').innerHTML = iocs.map(ioc => `
+        <div class="ioc-item">
+            <span class="ioc-type">${ioc.type}</span>
+            <span class="ioc-value">${ioc.value}</span>
+            <span class="ioc-confidence">${ioc.confidence}</span>
+        </div>
+    `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════════
+function showToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+}
+
+// Modal close on overlay click
+document.getElementById('threatModal').onclick = function(e) { if (e.target === this) closeModal(); };
+
+// Timeline buttons
+document.querySelectorAll('.timeline-btn').forEach(btn => {
+    btn.onclick = function() {
+        this.parentElement.querySelectorAll('.timeline-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+    };
+});
+</script>
+
+</body>
+</html>

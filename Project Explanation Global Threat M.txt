@@ -1,0 +1,391 @@
+Project Explanation: Global Threat Mapping Website
+1. Project Goal
+
+Build a real-time web-based platform that collects, verifies, categorizes, and visualizes global threat-related events using open-source intelligence (OSINT).
+
+The platform exists to provide situational awareness and analytical understanding, not prediction, attribution, or surveillance.
+
+2. Core Function of the Website
+
+The website must:
+
+Continuously ingest live data from trusted public sources
+
+Convert raw information into structured threat entries
+
+Display these threats on an interactive world map
+
+Allow users to explore how threats affect different sectors
+
+3. What the Website Tracks
+
+The system tracks events, not opinions or forecasts.
+
+Supported threat domains:
+
+Cyber
+
+Health
+
+Economic
+
+Political
+
+Terrorism
+
+Environmental
+
+Hybrid (multi-domain events)
+
+Important logic:
+
+Cyber incidents are not terrorism or national security threats by default
+
+Escalation only occurs if evidence-based conditions are met
+
+4. How Data Enters the System
+
+The website must automatically ingest live OSINT feeds such as APIs:
+
+Government advisories
+
+International organization alerts
+
+Reputable news sources
+
+Disaster alert systems
+
+Rules:
+
+No static or demo data
+
+No manual fake entries
+
+Social media is optional and must be corroborated
+
+5. Threat Processing Logic
+
+For each incoming event, the system must:
+
+Extract factual information (what, where, when)
+
+Assign one primary threat category
+
+Assign optional secondary sector tags
+
+Store indicators that prove the event happened
+
+Attach source information and reliability level
+
+Assign a confidence score
+
+If any are missing, do not display the threat.
+
+6. Threat Data Fields (Mandatory)
+
+Every threat entry must contain:
+
+Threat ID (system-generated, searchable)
+
+Title and short factual description
+
+Event time (UTC)
+
+Location (country + coordinates)
+
+Primary category
+
+Secondary tags (if applicable)
+
+Severity level
+
+Impacted sector(s)
+
+Indicators (evidence)
+
+Source list
+
+Confidence level
+
+Current status (emerging / ongoing / resolved)
+
+7. Map Behavior
+
+The map must:
+
+Plot threats using approximate coordinates
+
+Use simple markers per category; icons only if necessary
+
+Use colors for severity
+
+Update automatically as new threats arrive
+
+Clicking a map marker must show:
+
+Description
+
+Impact
+
+Sources
+
+Confidence
+
+Related threats (if any)
+
+8. Threat Relationships
+
+The system must support observed cross-domain links, such as:
+
+Cyber incident -> Healthcare disruption
+
+Terrorist attack -> Supply chain delay
+
+Rules:
+
+Relationships must be based on observed impact
+
+No future predictions
+
+No speculative linking
+
+9. User Interaction Modes
+
+The website supports two modes:
+
+Passive Mode
+
+Shows a daily feed of recent threats
+
+Displays current global situation
+
+Active Mode
+
+Users filter by region, time, category, or sector
+
+Users explore historical threats and relationships
+
+10. Ethical & Legal Constraints
+
+The system must enforce:
+
+No personal data
+
+No prediction or forecasting
+
+No attribution without verified evidence
+
+No panic-inducing language
+
+OSINT-only data usage
+
+If ethical rules are violated, block the threat from appearing.
+
+12. What the Website Is NOT
+
+The website is NOT:
+
+A prediction engine
+
+A surveillance platform
+
+A social media monitoring tool
+
+A blame or attribution system
+
+13. Success Criteria
+
+The website is successful if:
+
+All threats are verifiable and sourced
+
+The map updates continuously
+
+Threats are not over-classified
+
+Cross-domain impacts are understandable
+
+Ethical constraints are never violated
+
+System Layout: Global Threat Mapping Tool
+
+This layout shows how components are arranged and how data flows visually from left to right, top to bottom.
+
+
+---
+
+1. External Data Sources (Top Layer)
+
+[ Cyber Threat Feeds ]   [ Health Advisories ]   [ Economic Indicators ]   [ News & OSINT ]   [ Gov / CERT Reports ]
+
+All sources feed raw, unprocessed events into the system.
+
+
+---
+
+2. Data Ingestion Layer
+
+┌───────────────────────────────┐
+│        Ingestion Engine       │
+│  • API Pulls                  │
+│  • Web Scrapers               │
+│  • Analyst-verified inputs    │
+└───────────────────────────────┘
+
+Output: Raw Events + Metadata (time, source, location)
+
+
+---
+
+3. Validation & Trust Layer
+
+┌───────────────────────────────┐
+│   Validation & Trust Engine   │
+│  • Source Credibility Score   │
+│  • Cross-Source Verification  │
+│  • Duplicate Removal          │
+│  • Confidence Level Tagging   │
+└───────────────────────────────┘
+
+Only verified events move forward.
+
+
+---
+
+4. Threat Classification Layer
+
+┌───────────────────────────────┐
+│     Threat Classification     │
+│  • Cyber                      │
+│  • Health                     │
+│  • Economic                   │
+│  • Political                  │
+│  • Terrorism                  │
+│  • Environmental              │
+└───────────────────────────────┘
+
+Rule: One primary category per event (no early escalation).
+
+
+---
+
+5. Correlation & Impact Analysis Layer (Core Engine)
+
+┌───────────────────────────────────────────┐
+│   Correlation & Impact Analysis Engine    │
+│  • Cause-Effect Detection                 │
+│  • Cross-Sector Linking                   │
+│  • Timeline Tracking                      │
+│  • Analyst-Approved Escalation            │
+└───────────────────────────────────────────┘
+
+This layer creates links like: Cyber -> Economy -> Health -> Political
+
+
+---
+
+6. Threat Intelligence Database
+
+┌───────────────────────────────────────────┐
+│        Threat Intelligence Store          │
+│  • Events                                 │
+│  • Indicators                             │
+│  • Confidence Scores                      │
+│  • Correlation Graphs                     │
+│  • Historical Timelines                   │
+└───────────────────────────────────────────┘
+
+Acts as the memory of the system.
+
+
+---
+
+7. Visualization & User Interface Layer (Bottom Layer)
+
+┌──────────────┐  ┌──────────────┐  ┌────────────────┐
+│ Analyst View │  │ Student View │  │ Decision View  │
+│ • Global Map │  │ • Learning   │  │ • Risk Summary │
+│ • Timelines  │  │ • Scenarios  │  │ • Heatmaps     │
+└──────────────┘  └──────────────┘  └────────────────┘
+
+All views use the same backend data.
+
+
+---
+
+8. Governance, Ethics & Access Control (Side Layer - Always Active)
+
+No personal data ingestion; no prediction or speculation; no attribution without evidence; full audit logs
+
+
+---
+
+9. End-to-End Flow Summary
+
+Real-World Event -> Ingestion -> Validation -> Classification -> Correlation -> Storage -> Visualization
+
+This layout ensures accuracy, ethical analysis, and real-world usability.
+
+14. Data Structure for the Map
+To support visualization, filtering, and analysis, threat data must serve both backend storage and frontend rendering needs. The structure enables accurate geographic plotting, meaningful clustering, heatmap generation, and correlation while remaining scalable for future analytical extensions.
+
+Each threat displayed on the map is represented as a single logical object composed of six data blocks:
+1. Core Threat Data
+2. Location
+3. Classification
+4. Relationships
+5. Temporal and Intensity Data
+6. Map Rendering Properties
+
+Threat Object
+- Core Threat Data
+- Location
+- Classification
+- Relationships
+- Temporal and Intensity Data
+- Map Rendering Properties
+
+Core Threat Data
+Purpose:
+- Provides context and priority for the threat
+- Supports sorting, severity-based visualization, and detailed threat views
+Key fields:
+Threat identifier, title and description, threat type and severity, confidence score, status (emerging, ongoing, resolved), first observed, sources
+
+Location
+Purpose:
+- Enables precise marker placement on the map
+- Supports geographic filtering and regional analysis
+Key fields:
+Latitude and longitude, country and region
+
+Classification
+Purpose:
+- Enables dynamic filtering and grouping
+- Supports legend generation and cluster labeling
+Key fields:
+Threat category (e.g., cyber, health, economic), attack vectors, targeted sectors, suspected actor type
+
+Relationships
+Purpose:
+- Enables campaign tracking and threat correlation
+- Supports navigation between related incidents
+Key fields:
+Campaign identifier, list of related threat identifiers
+
+Temporal and Intensity Data
+Purpose:
+- Enables heatmap weighting
+- Supports timeline-based filtering and trend identification
+Key fields:
+Event count, activity duration window, most recent activity timestamp
+
+Map Rendering Properties
+Purpose:
+- Reduces frontend computation
+- Ensures consistent rendering behavior across map components
+Key fields:
+Marker color and icon, cluster grouping label, heatmap visibility flag, minimum zoom level for marker visibility
+
+This design is for an initial platform release while remaining extensible for future enhancements such as advanced correlation and reporting.
+

@@ -1,0 +1,14 @@
+node_modules/
+.env
+*.log
+.DS_Store
+dist/
+build/
+.vscode/
+*.swp
+*.swo
+package-lock.json
+*.db
+*.db-journal
+*.db-wal
+*.db-shm

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INtelligence Map | Strategic Intelligence</title>
+
+    <!-- Google Fonts: Inter and Roboto Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- External Dependencies -->
+    <link rel="stylesheet" href="leaflet.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="mode-analyst">
+    <header>
+        <div class="brand">
+            <i class="fa-solid fa-radar fa-spin-pulse" style="--fa-animation-duration: 4s;"></i>
+            <span style="letter-spacing: 2px;">INtelligence <span
+                    style="color: var(--accent-primary);">Map</span></span>
+        </div>
+
+        <div class="header-center">
+            <button class="nav-tab active" data-view="map" onclick="switchView('map')">
+                <i class="fa-solid fa-globe"></i> MAP
+            </button>
+            <button class="nav-tab" data-view="analytics" onclick="switchView('analytics')">
+                <i class="fa-solid fa-chart-mixed"></i> ANALYTICS
+            </button>
+        </div>
+
+
+        <div class="header-controls">
+            <button id="manageSourcesBtn" class="nav-btn" style="margin-right: 10px;">
+                <i class="fa-solid fa-square-rss"></i> MANAGE SOURCES
+            </button>
+
+            <div class="status-indicator-group">
+                <div class="status-dot active" id="liveStatus"></div>
+                <span id="statusText">SYSTEM LIVE</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-container">
+        <!-- GLOBAL MAP REGION -->
+        <section class="map-region">
+            <div id="map"></div>
+            <!-- Tactical Overlays -->
+            <div class="map-overlay-grid"></div>
+            <div class="map-scanline"></div>
+        </section>
+
+        <div class="threat-metrics-bar">
+            <div class="metric-chip" onclick="filterByMetric('active')" id="chipActive">
+                <i class="fa-solid fa-satellite-dish" style="color:var(--accent-primary);"></i>
+                <span>ACTIVE SIGNALS</span>
+                <span class="metric-val" id="metricActive">0</span>
+            </div>
+            <div class="metric-chip" onclick="filterByMetric('mitigated')" id="chipMitigated">
+                <i class="fa-solid fa-shield-halved" style="color:var(--low);"></i>
+                <span>MITIGATED</span>
+                <span class="metric-val" id="metricMitigated" style="color:var(--low);">0</span>
+            </div>
+            <div class="metric-chip" onclick="filterByMetric('delta')" id="chipDelta">
+                <i class="fa-solid fa-clock" style="color:var(--medium);"></i>
+                <span>24H DELTA</span>
+                <span class="metric-val" id="metricDelta" style="color:var(--high);">+0</span>
+            </div>
+        </div>
+
+        <!-- MAP LEGEND (NEW) -->
+        <div class="map-legend">
+            <div class="legend-title">SEVERITY</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--critical);box-shadow:0 0 6px var(--critical);"></div> CRITICAL</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--high);box-shadow:0 0 6px var(--high);"></div> HIGH</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--medium);box-shadow:0 0 6px var(--medium);"></div> MEDIUM</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--low);box-shadow:0 0 6px var(--low);"></div> LOW</div>
+            <div class="legend-title" style="margin-top:10px;">CATEGORIES</div>
+            <div class="legend-item"><i class="fa-solid fa-laptop-code" style="color:var(--accent-primary);font-size:0.7rem;"></i> CYBER</div>
+            <div class="legend-item"><i class="fa-solid fa-jet-fighter" style="color:var(--high);font-size:0.7rem;"></i> WAR</div>
+            <div class="legend-item"><i class="fa-solid fa-virus-covid" style="color:var(--critical);font-size:0.7rem;"></i> HEALTH</div>
+            <div class="legend-item"><i class="fa-solid fa-building-columns" style="color:var(--medium);font-size:0.7rem;"></i> POLITICAL</div>
+        </div>
+
+
+
+
+        <!-- FLOATING SEARCH -->
+        <!-- LEFT SIDEBAR: INTELLIGENCE FILTERS -->
+        <aside class="sidebar sidebar-left" id="sidebarLeft">
+            <div class="search-container">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="smartSearch" class="search-input" placeholder="Search Intelligence...">
+            </div>
+
+            <div class="filter-group" style="margin-bottom: 24px; display: none;">
+                <span class="filter-label">MANUAL LINK INGESTION</span>
+                <form id="ingestLinkForm" style="display: flex; gap: 8px;">
+                    <input type="url" id="ingestUrlInput" class="search-input" placeholder="Paste report URL..."
+                        required style="padding-left: 14px; margin-bottom: 0; flex: 1;">
+                    <button type="submit" class="nav-btn"
+                        style="padding: 10px 14px; border-radius: var(--radius-md); background: var(--accent-primary); color: var(--bg-dark); border-color: var(--accent-primary);"
+                        title="Ingest Article">
+                        <i class="fa-solid fa-cloud-arrow-down"></i>
+                    </button>
+                </form>
+                <div id="ingestStatus"
+                    style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; display: none; font-family: var(--font-data)">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <span class="filter-label">CATEGORIES</span>
+
+                <div class="checkbox-list">
+                    <label class="custom-cb">
+                        <input type="checkbox" class="cat-filter" value="Cyber" checked>
+                        <span class="checkmark"></span>
+                        <i class="fa-solid fa-laptop-code cb-icon"></i>
+                        <span class="cb-text">Cyber</span>
+                    </label>
+                    <label class="custom-cb">
+                        <input type="checkbox" class="cat-filter" value="Health" checked>
+                        <span class="checkmark"></span>
+                        <i class="fa-solid fa-virus-covid cb-icon"></i>
+                        <span class="cb-text">Health</span>
+                    </label>
+                    <label class="custom-cb">
+                        <input type="checkbox" class="cat-filter" value="Political" checked>
+                        <span class="checkmark"></span>
+                        <i class="fa-solid fa-building-columns cb-icon"></i>
+                        <span class="cb-text">Political</span>
+                    </label>
+                    <label class="custom-cb">
+                        <input type="checkbox" class="cat-filter" value="War" checked>
+                        <span class="checkmark"></span>
+                        <i class="fa-solid fa-jet-fighter cb-icon"></i>
+                        <span class="cb-text">War</span>
+                    </label>
+                    <label class="custom-cb">
+                        <input type="checkbox" class="cat-filter" value="Economic" checked>
+                        <span class="checkmark"></span>
+                        <i class="fa-solid fa-chart-line cb-icon"></i>
+                        <span class="cb-text">Economic</span>
+                    </label>
+                    <label class="custom-cb">
+                        <input type="checkbox" class="cat-filter" value="Environmental" checked>
+                        <span class="checkmark"></span>
+                        <i class="fa-solid fa-cloud-bolt cb-icon"></i>
+                        <span class="cb-text">Environmental</span>
+                    </label>
+                    <label class="custom-cb">
+                        <input type="checkbox" class="cat-filter" value="Hybrid" checked>
+                        <span class="checkmark"></span>
+                        <i class="fa-solid fa-shield-halved cb-icon"></i>
+                        <span class="cb-text">Hybrid</span>
+                    </label>
+                </div>
+            </div>
+
+
+            <div class="filter-group">
+                <span class="filter-label">SEVERITY PRIORITY</span>
+
+                <div class="checkbox-list">
+                    <label class="custom-cb">
+                        <input type="checkbox" class="sev-filter" value="Critical" checked>
+                        <span class="checkmark"></span>
+                        <span class="sev-dot critical"></span>
+                        <span class="cb-text">Level 1: Critical</span>
+                    </label>
+                    <label class="custom-cb">
+                        <input type="checkbox" class="sev-filter" value="High" checked>
+                        <span class="checkmark"></span>
+                        <span class="sev-dot high"></span>
+                        <span class="cb-text">Level 2: High</span>
+                    </label>
+                    <label class="custom-cb">
+                        <input type="checkbox" class="sev-filter" value="Medium" checked>
+                        <span class="checkmark"></span>
+                        <span class="sev-dot medium"></span>
+                        <span class="cb-text">Level 3: Medium</span>
+                    </label>
+                    <label class="custom-cb">
+                        <input type="checkbox" class="sev-filter" value="Low" checked>
+                        <span class="checkmark"></span>
+                        <span class="sev-dot low"></span>
+                        <span class="cb-text">Level 4: Low</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Reset Button Always Visible -->
+            <button id="resetFilters" class="reset-btn">
+                <i class="fa-solid fa-sync"></i> RECALIBRATE SENSORS
+            </button>
+        </aside>
+        <button id="toggleSidebarLeft" class="sidebar-toggle left-toggle" title="Toggle Data Layers">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+
+
+        <!-- RIGHT SIDEBAR: LIVE FEED -->
+        <aside class="sidebar sidebar-right" id="sidebarRight">
+            <div class="sidebar-header-actions">
+                <h2 style="font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 0;">
+                    <i class="fa-solid fa-waveform-path"></i> RAW SIGNAL FEED
+                </h2>
+            </div>
+
+            <div class="feed-container" id="threatFeed">
+                <!-- Threat cards -->
+            </div>
+        </aside>
+        <button id="toggleSidebarRight" class="sidebar-toggle right-toggle" title="Toggle Signal Feed">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+
+
+
+
+
+        <!-- FULL-WIDTH BOTTOM TICKER -->
+        <section class="bottom-ticker-bar">
+            <div id="bottomTicker" class="ticker-content"></div>
+        </section>
+
+
+
+        <!-- FLOATING ANALYSIS WIDGETS -->
+        <section class="dashboard-widgets" id="dashboardWidgets">
+
+            <div class="dash-widget risk-widget">
+                <span class="widget-label">GLOBAL RISK INDEX</span>
+                <div class="risk-control-group">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <svg viewBox="0 0 100 55" width="90" height="50" style="flex-shrink:0;">
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6" stroke-dasharray="141.37" stroke-dashoffset="0" stroke-linecap="round"/>
+                            <circle id="riskDialFill" cx="50" cy="50" r="45" fill="none" stroke="var(--accent-primary)" stroke-width="6" stroke-dasharray="141.37" stroke-dashoffset="141.37" stroke-linecap="round" transform="rotate(-90 50 50)" style="transition: stroke-dashoffset 0.8s ease;"/>
+                            <text x="50" y="42" text-anchor="middle" fill="var(--text-primary)" font-size="18" font-weight="800" font-family="var(--font-data)"><tspan id="intensityScore">0.0</tspan></text>
+                            <text x="50" y="53" text-anchor="middle" fill="var(--text-muted)" font-size="5" font-family="var(--font-data)">RISK INDEX</text>
+                        </svg>
+                        <div>
+                            <div style="font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">SIGNAL STRENGTH</div>
+                            <div id="signalStrengthValue" style="font-size:1.4rem; font-weight:800; font-family:var(--font-data); color:var(--accent-primary);">0.0</div>
+                            <div class="trend-line" style="width:120px; height:30px;"></div>
+                        </div>
+                    </div>
+                    <div class="timeline-control">
+                        <button class="timeline-btn" data-period="2025">2025</button>
+                        <button class="timeline-btn active" data-period="2026">2026</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dash-widget analytics-widget">
+                <span class="widget-label">THREAT DISTRIBUTION</span>
+                <div id="analyticsBars" class="analytics-bars-horizontal">
+                    <!-- Dynamic Bars -->
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- ═══════════ ANALYTICS PANEL (NEW) ═══════════ -->
+        <div class="analytics-panel" id="analyticsPanel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="fa-solid fa-chart-mixed"></i> ADVANCED ANALYTICS & THREAT INTELLIGENCE
+                </div>
+                <button class="panel-close" onclick="switchView('map')"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="panel-body">
+                <div class="analytics-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Signals</div>
+                        <div class="stat-value" id="statTotal">0</div>
+                        <div class="stat-change up"><i class="fa-solid fa-arrow-up"></i> +12.4% vs last week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Critical Alerts</div>
+                        <div class="stat-value" style="color:var(--critical);" id="statCritical">0</div>
+                        <div class="stat-change up"><i class="fa-solid fa-arrow-up"></i> +8.2% vs last week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Mean Response Time</div>
+                        <div class="stat-value" id="statResponse">4.2h</div>
+                        <div class="stat-change down"><i class="fa-solid fa-arrow-down"></i> -15.7% improved</div>
+                    </div>
+                    <div class="chart-card wide">
+                        <div class="chart-title"><i class="fa-solid fa-chart-line"></i> Threat Volume Trend (30 Days)</div>
+                        <div class="chart-wrapper"><canvas id="chartTrend" height="160"></canvas></div>
+                    </div>
+                    <div class="chart-card tall">
+                        <div class="chart-title"><i class="fa-solid fa-chart-pie"></i> Category Breakdown</div>
+                        <div class="chart-wrapper"><canvas id="chartCategory" height="200"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title"><i class="fa-solid fa-chart-bar"></i> Severity Distribution</div>
+                        <div class="chart-wrapper"><canvas id="chartSeverity" height="140"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title"><i class="fa-solid fa-globe"></i> Top Targeted Regions</div>
+                        <div class="chart-wrapper"><canvas id="chartRegions" height="140"></canvas></div>
+                    </div>
+                    <div class="chart-card wide">
+                        <div class="chart-title"><i class="fa-solid fa-crosshairs"></i> Active Indicators of Compromise (IOCs)</div>
+                        <div class="ioc-list" id="iocList"></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title"><i class="fa-solid fa-clock-rotate-left"></i> Attack Vector Frequency</div>
+                        <div class="chart-wrapper"><canvas id="chartAttackVec" height="140"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- DETAIL MODAL -->
+    <div class="modal-overlay" id="threatModal">
+        <div class="modal-content">
+            <button class="close-modal" id="closeModal">
+                <i class="fa-solid fa-times"></i>
+            </button>
+            <div id="modalBody">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- SOURCES MODAL -->
+    <div class="modal-overlay" id="sourcesModal">
+        <div class="modal-content" style="max-width: 650px;">
+            <button class="close-modal" id="closeSourcesModal">
+                <i class="fa-solid fa-times"></i>
+            </button>
+            <div class="modal-header-hero">
+                <h1
+                    style="font-size:2.1rem; font-weight: 800; margin: 0; line-height: 1.1; letter-spacing: -1px; display: flex; align-items: center; gap: 12px;">
+                    <i class="fa-solid fa-square-rss" style="color: var(--accent-primary);"></i> RSS FEED MANAGER
+                </h1>
+                <p style="color: var(--text-secondary); margin-top: 10px; font-size: 0.9rem;">
+                    Configure external RSS/XML streams to ingest intelligence in real time.
+                </p>
+            </div>
+
+            <!-- Add New Source Form -->
+            <form id="addSourceForm"
+                style="margin-top: 24px; padding: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); border-radius: var(--radius-md);">
+                <div
+                    style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;">
+                    Add Channel</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <input type="text" id="newSourceName" class="search-input" placeholder="Channel Name (e.g. CISA)"
+                        required style="padding-left: 14px;">
+                    <input type="url" id="newSourceUrl" class="search-input" placeholder="Feed URL (e.g. https://...)"
+                        required style="padding-left: 14px;">
+                </div>
+                <button type="submit" class="nav-btn"
+                    style="width: 100%; background: var(--accent-primary); color: var(--bg-dark); border-color: var(--accent-primary);">
+                    <i class="fa-solid fa-plus"></i> ADD SIGNAL CHANNEL
+                </button>
+            </form>
+
+            <!-- Manual URL Ingestion (hidden from sidebar, accessible here) -->
+            <div style="margin-top: 20px; padding: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); border-radius: var(--radius-md);">
+                <div
+                    style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;">
+                    <i class="fa-solid fa-link"></i> QUICK INGEST REPORT URL</div>
+                <form id="ingestLinkFormModal" style="display: flex; gap: 8px;">
+                    <input type="url" id="ingestUrlInputModal" class="search-input" placeholder="Paste report URL..."
+                        required style="padding-left: 14px; margin-bottom: 0; flex: 1;">
+                    <button type="submit" class="nav-btn"
+                        style="padding: 10px 14px; border-radius: var(--radius-md); background: var(--accent-primary); color: var(--bg-dark); border-color: var(--accent-primary);"
+                        title="Ingest Article">
+                        <i class="fa-solid fa-cloud-arrow-down"></i>
+                    </button>
+                </form>
+                <div id="ingestStatusModal"
+                    style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; display: none; font-family: var(--font-data)">
+                </div>
+            </div>
+
+            <!-- Active Sources List -->
+            <div style="margin-top: 30px;">
+                <div
+                    style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;">
+                    Active Signal Channels</div>
+                <div class="sources-list" id="sourcesList">
+                    <!-- Dynamic list items -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="leaflet.min.js"></script>
+    <script src="leaflet-heat.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="socket.io.min.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
