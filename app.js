@@ -37,6 +37,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.warn('[INIT] config failed:', error.message);
     }
 
+    applyResponsiveLayout();
+    window.addEventListener('resize', handleResponsiveResize);
+
     // Wrap each init in try-catch so one failure doesn't kill the chain
     const safeInit = (name, fn) => {
         try { fn(); } catch (e) { console.warn('[INIT] ' + name + ' failed:', e.message); }
@@ -126,14 +129,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 });
 
+function handleResponsiveResize() {
+    applyResponsiveLayout();
+    if (state.map) {
+        setTimeout(() => state.map.invalidateSize({ animate: false }), 120);
+    }
+}
+
+function applyResponsiveLayout() {
+    const isMobile = window.innerWidth <= 900;
+    document.body.classList.toggle('is-mobile', isMobile);
+
+    const leftSidebar = document.getElementById('sidebarLeft');
+    const rightSidebar = document.getElementById('sidebarRight');
+    const leftToggle = document.getElementById('toggleSidebarLeft');
+    const rightToggle = document.getElementById('toggleSidebarRight');
+
+    if (leftSidebar && rightSidebar && leftToggle && rightToggle) {
+        if (isMobile) {
+            leftSidebar.style.width = 'min(72vw, 300px)';
+            rightSidebar.style.width = 'min(72vw, 300px)';
+            leftToggle.style.left = leftSidebar.classList.contains('collapsed') ? '0px' : 'calc(min(72vw, 300px) - 2px)';
+            rightToggle.style.right = rightSidebar.classList.contains('collapsed') ? '0px' : 'calc(min(72vw, 300px) - 2px)';
+        } else {
+            leftSidebar.style.width = '';
+            rightSidebar.style.width = '';
+            leftToggle.style.left = '';
+            rightToggle.style.right = '';
+        }
+    }
+
+    if (state.map) {
+        state.map.invalidateSize();
+    }
+}
+
 function toggleSidebar(sidebarId) {
     const sidebar = document.getElementById(sidebarId);
     const btn = document.getElementById(`toggle${sidebarId.charAt(0).toUpperCase() + sidebarId.slice(1)}`);
     if (sidebar && btn) {
         const isCollapsed = sidebar.classList.toggle('collapsed');
         btn.classList.toggle('collapsed');
-        // Smoother map resize
-        setTimeout(() => state.map.invalidateSize({ animate: true }), 300);
+        if (window.innerWidth <= 900) {
+            const mobileOffset = isCollapsed ? 0 : 12;
+            if (sidebarId === 'sidebarLeft') {
+                btn.style.left = isCollapsed ? '0px' : `calc(min(72vw, 300px) - ${mobileOffset}px)`;
+            }
+            if (sidebarId === 'sidebarRight') {
+                btn.style.right = isCollapsed ? '0px' : `calc(min(72vw, 300px) - ${mobileOffset}px)`;
+            }
+        }
+        setTimeout(() => state.map && state.map.invalidateSize({ animate: true }), 300);
     }
 }
 
