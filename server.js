@@ -849,7 +849,12 @@ async function findExistingByTitleOrUrl(title, url) {
     // 1. Check by URL
     if (url) {
         const byUrl = await threatsCollection.find({ sources: { $regex: url } }).toArray();
-        const urlMatch = byUrl.find(t => { try { return JSON.parse(t.sources || '[]').some(s => s.url === url); } catch (_) { return false; } });
+        const urlMatch = byUrl.find(t => {
+            try {
+                const sources = Array.isArray(t.sources) ? t.sources : JSON.parse(t.sources || '[]');
+                return sources.some(s => s.url === url);
+            } catch (_) { return false; }
+        });
         if (urlMatch) return urlMatch;
     }
     // 2. Check by similar title (first 60 chars)

@@ -17,6 +17,8 @@ const threatFields = [
     'secondaryTags', 'relatedThreats', 'createdAt', 'updatedAt'
 ];
 
+const jsonbFields = new Set(['location', 'impactedSectors', 'indicators', 'sources', 'secondaryTags', 'relatedThreats']);
+
 function throwIfError(error, operation) {
     if (error) throw new Error(`${operation}: ${error.message}`);
 }
@@ -32,6 +34,7 @@ function applyThreatFilters(builder, query = {}) {
             const clauses = [];
             for (const alternative of value) {
                 for (const [field, condition] of Object.entries(alternative)) {
+                    if (jsonbFields.has(field)) continue;
                     if (condition && condition.$regex) {
                         clauses.push(`${field}.ilike.%${String(condition.$regex).replace(/[,()]/g, '')}%`);
                     } else {
@@ -43,9 +46,20 @@ function applyThreatFilters(builder, query = {}) {
             continue;
         }
 
+        if (jsonbFields.has(key)) {
+            if (key === 'sources') {
+                const targetUrl = (value && typeof value === 'object' && value.$regex) ? value.$regex : (typeof value === 'string' ? value : null);
+                if (targetUrl) {
+                    result = result.contains('sources', JSON.stringify([{ url: targetUrl }]));
+                }
+            }
+            continue;
+        }
+
         if (value && typeof value === 'object') {
             if ('$lt' in value) result = result.lt(key, value.$lt);
             if ('$ne' in value) result = result.neq(key, value.$ne);
+            if ('$regex' in value) result = result.ilike(key, `%${String(value.$regex).replace(/[,()]/g, '')}%`);
         } else {
             result = result.eq(key, value);
         }
@@ -94,8 +108,10 @@ const threatsCollection = {
     },
 
     async updateOne(query, update) {
-        if (!query || !update || !update.$set || Object.keys(update.$set).length === 0) return;
-        const { error } = await applyThreatFilters(supabase.from('threats'), query).update(update.$set);
+        const payload = (update && update.$set) ? update.$set : update;
+        if (!query || !payload || Object.keys(payload).length === 0) return;
+        const request = applyThreatFilters(supabase.from('threats').update(payload), query);
+        const { error } = await request;
         throwIfError(error, 'Unable to update threat');
     },
 
